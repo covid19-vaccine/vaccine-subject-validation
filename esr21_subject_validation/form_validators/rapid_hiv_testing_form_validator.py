@@ -2,7 +2,7 @@ from dateutil.relativedelta import relativedelta
 from edc_constants.choices import YES
 from edc_form_validators import FormValidator
 from django.core.exceptions import ValidationError
-from edc_constants.constants import NO, POS
+from edc_constants.constants import NO, POS, NEG
 
 
 class RapidHivTestingFormValidator(FormValidator):
@@ -12,6 +12,12 @@ class RapidHivTestingFormValidator(FormValidator):
 
         rapid_test_date = self.cleaned_data.get('rapid_test_date')
         hiv_test_date = self.cleaned_data.get('hiv_test_date')
+
+        self.required_if(
+            NEG, 
+            field='hiv_result', 
+            field_required='rapid_test_done')
+        
 
         self.required_if(
             YES,
