@@ -10,6 +10,7 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
 
         required_fields = ['vaccination_site', 'vaccination_date', 'lot_number',
                            'expiry_date', 'provider_name']
+        required_fields += ['part_supervised', 'adverse_event']
 
         for required_field in required_fields:
             self.required_if(YES,
