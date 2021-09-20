@@ -2,6 +2,7 @@
 
 from django.apps import apps as django_apps
 from django.core.exceptions import ValidationError
+from edc_constants.constants import YES
 from edc_form_validators import FormValidator
 
 
@@ -22,3 +23,5 @@ class ScreeningEligibilityFormValidator(FormValidator):
                                     f' {self.edc_protocol.study_open_datetime.date()}.')}
             self._errors.update(message)
             raise ValidationError(message)
+        self.required_if(YES, field='childbearing_potential', field_required='birth_control')
+        self.required_if(YES, field='birth_control', field_required='birthcontrol_agreement')
