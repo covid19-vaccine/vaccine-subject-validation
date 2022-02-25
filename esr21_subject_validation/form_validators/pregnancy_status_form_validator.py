@@ -1,6 +1,6 @@
 from django import forms
 from django.apps import apps as django_apps
-from edc_constants.constants import OTHER, YES, NO
+from edc_constants.constants import OTHER, NO, YES
 from edc_form_validators import FormValidator
 
 from .crf_form_validator import CRFFormValidator
@@ -31,8 +31,12 @@ class PregnancyStatusFormValidator(CRFFormValidator, FormValidator):
 
         self.validate_other_specify(field='post_menopausal')
 
-        self.required_if(NO, field='amenorrhea_history',
-                         field_required='start_date_menstrual_period')
+        amenorrhea_history = self.cleaned_data.get('amenorrhea_history')
+        primary_amenorrhea = self.cleaned_data.get('primary_amenorrhea')
+
+        self.required_if_true(
+            (amenorrhea_history == NO and primary_amenorrhea == NO),
+            field_required='start_date_menstrual_period')
 
         start_date_menstrual_period = self.cleaned_data.get('start_date_menstrual_period')
         expected_delivery = self.cleaned_data.get('expected_delivery')
