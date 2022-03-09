@@ -3,7 +3,7 @@ from django.test import TestCase
 from edc_base.utils import get_utcnow
 from edc_constants.constants import NO, OTHER, YES
 
-from ..form_validators import HospitalizationFormValidator
+from ..form_validators import HospitalisationFormValidator
 from .models import ListModel
 
 from .models import Appointment, SubjectVisit
@@ -19,7 +19,7 @@ class TestHospitalizationForm(TestCase):
             visit_code='1001')
         subject_visit = SubjectVisit.objects.create(
             appointment=appointment)
-        HospitalizationFormValidator.demographics_data_model = \
+        HospitalisationFormValidator.demographics_data_model = \
             'esr21_subject_validation.hospitalization'
 
         ListModel.objects.create(name='symptoms')
@@ -34,7 +34,7 @@ class TestHospitalizationForm(TestCase):
 
     def test_hospitialization_data(self):
 
-        form_validator = HospitalizationFormValidator(
+        form_validator = HospitalisationFormValidator(
             cleaned_data=self.hospitalization_options)
         try:
             form_validator.validate()
@@ -46,7 +46,7 @@ class TestHospitalizationForm(TestCase):
         """
         self.hospitalization_options['ongoing'] = NO
 
-        form_validator = HospitalizationFormValidator(
+        form_validator = HospitalisationFormValidator(
             cleaned_data=self.hospitalization_options)
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn('stop_date', form_validator._errors)
@@ -56,7 +56,7 @@ class TestHospitalizationForm(TestCase):
         """
         self.hospitalization_options['reason'] = OTHER
 
-        form_validator = HospitalizationFormValidator(
+        form_validator = HospitalisationFormValidator(
             cleaned_data=self.hospitalization_options)
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn('reason_other', form_validator._errors)
@@ -67,7 +67,7 @@ class TestHospitalizationForm(TestCase):
         self.hospitalization_options.update(
             covid_symptoms=None,
             reason='covid')
-        form_validator = HospitalizationFormValidator(
+        form_validator = HospitalisationFormValidator(
             cleaned_data=self.hospitalization_options)
         try:
             form_validator.validate()

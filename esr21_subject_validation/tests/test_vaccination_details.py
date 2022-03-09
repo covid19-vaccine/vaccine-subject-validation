@@ -4,19 +4,32 @@ from edc_base.utils import get_utcnow, relativedelta
 from edc_constants.constants import NO, YES, OTHER, NOT_APPLICABLE
 
 from ..form_validators import VaccineDetailsFormValidator
-from ..constants import *
+from ..constants import FIRST_DOSE
+
+from .models import Appointment, SubjectVisit
+from django.test.utils import tag
 
 
 class VaccinationDetailsFormValidatorTests(TestCase):
 
     def setUp(self):
+        subject_identifier = '1234567'
+        appointment = Appointment.objects.create(
+            subject_identifier=subject_identifier,
+            appt_datetime=get_utcnow(),
+            visit_code='1000',
+            schedule_name='esr21_enrol_schedule')
+        subject_visit = SubjectVisit.objects.create(
+            appointment=appointment,
+            schedule_name='esr21_enrol_schedule')
         self.data = {
+            'subject_visit': subject_visit,
             'received_dose': YES,
-            'report_datetime': '01/01/0001',
+            'report_datetime': get_utcnow().date(),
             'received_dose_before': 'ABC',
             'vaccination_site': 'ABC',
             'vaccination_date': 'ABC',
-            'admin_per_protocol': "DATa",
+            'admin_per_protocol': YES,
             'reason_not_per_protocol': None,
             'lot_number': '123',
             'expiry_date': '01/01/2023',
