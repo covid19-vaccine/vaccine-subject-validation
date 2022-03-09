@@ -12,6 +12,8 @@ class Appointment(BaseUuidModel):
 
     visit_code = models.CharField(max_length=25)
 
+    schedule_name = models.CharField(max_length=25)
+
 
 class ListModel(ListModelMixin, BaseUuidModel):
     pass
@@ -68,6 +70,8 @@ class SubjectVisit(BaseUuidModel):
 
     report_datetime = models.DateTimeField(
         default=get_utcnow)
+
+    schedule_name = models.CharField(max_length=25)
 
     def save(self, *args, **kwargs):
         self.visit_code = self.appointment.visit_code
