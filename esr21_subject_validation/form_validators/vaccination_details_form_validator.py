@@ -1,7 +1,6 @@
-from dateutil.relativedelta import relativedelta
 from django.apps import apps as django_apps
 from django.core.exceptions import ValidationError
-from edc_constants.constants import YES, NO, NOT_APPLICABLE
+from edc_constants.constants import YES, NO
 from edc_form_validators import FormValidator
 from .crf_form_validator import CRFFormValidator
 from ..constants import FIRST_DOSE, SECOND_DOSE
@@ -66,7 +65,7 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
 
             second_before_first = True if second_dose_dt < first_dose_dt else False
 
-            difference = relativedelta(second_dose_dt, first_dose_dt).days
+            difference = (second_dose_dt - first_dose_dt).days
             second_lt_window = True if difference < 56 else False
 
             if second_before_first or second_lt_window:
@@ -87,7 +86,7 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
 
         if vaccination_datetime and dose_received == FIRST_DOSE:
             first_dose_dt = vaccination_datetime.date()
-            date_diff = relativedelta(next_vaccination_dt, first_dose_dt).days
+            date_diff = (next_vaccination_dt - first_dose_dt).days
 
             if date_diff < 56:
                 message = {'next_vaccination_date':
