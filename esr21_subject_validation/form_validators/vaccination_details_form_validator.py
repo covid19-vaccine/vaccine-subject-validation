@@ -1,14 +1,19 @@
-import pytz
+from dateutil.relativedelta import relativedelta
+from django.apps import apps as django_apps
 from django.core.exceptions import ValidationError
 from edc_constants.constants import YES, NO, NOT_APPLICABLE
 from edc_form_validators import FormValidator
 from .crf_form_validator import CRFFormValidator
-from ..constants import FIRST_DOSE
-from esr21_subject.models import VaccinationDetails
-from django.db.models import Q
+from ..constants import FIRST_DOSE, SECOND_DOSE
 
 
 class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
+
+    vaccination_details_cls = 'esr21_subject.vaccinationdetails'
+
+    @property
+    def vaccination_details_model_cls(self):
+        return django_apps.get_model(self.vaccination_details_cls)
 
     def clean(self):
 
@@ -28,8 +33,6 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
                                field='received_dose',
                                field_applicable=applicable_field)
 
-        self.validate_subject_doses()
-
         self.required_if(NO,
                          field='admin_per_protocol',
                          field_required='reason_not_per_protocol')
@@ -40,50 +43,70 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
                          field='received_dose_before',
                          field_required='next_vaccination_date')
 
+        self.validate_vaccination_date()
+
         self.validate_next_vaccination_dt()
 
         super().clean()
 
-    def validate_subject_doses(self):
+    def validate_vaccination_date(self):
         """
-        This is a validation which check if the vaccination is first or second
-        dose
+        Validate second dose vaccination datetime not before first dose datetime,
+        and not before 56days window period.
         """
+        subject_identifier = self.cleaned_data.get('subject_visit').subject_identifier
+        vaccination_datetime = self.cleaned_data.get('vaccination_date')
+        dose_received = self.cleaned_data.get('received_dose_before')
 
-        received_dose_before = self.cleaned_data.get('received_dose_before')
-        subject_visit = self.cleaned_data.get('subject_visit')
-        if received_dose_before == 'first_dose' and \
-                subject_visit.schedule_name != 'esr21_enrol_schedule':
-            # validation for second visit
-            raise ValidationError(
-                {'received_dose_before':
-                 'This is not an enrolment visit, cannot key as a first dose'})
+        if vaccination_datetime and dose_received == SECOND_DOSE:
+            second_dose_dt = vaccination_datetime.date()
+            vaccination = self.vaccination_details_model_obj(
+                dose_received=FIRST_DOSE, subject_identifier=subject_identifier)
+            first_dose_dt = vaccination.vaccination_date.date()
 
-        if received_dose_before == 'second_dose' and \
-                subject_visit.schedule_name == 'esr21_enrol_schedule':
-            # validation for first visit
-            raise ValidationError(
-                {'received_dose_before':
-                 'Should be keyed as first dose, for the enrolment visit'})
+            second_before_first = True if second_dose_dt < first_dose_dt else False
+
+            difference = relativedelta(second_dose_dt, first_dose_dt).days
+            second_lt_window = True if difference < 56 else False
+
+            if second_before_first or second_lt_window:
+                message = {'vaccination_date':
+                           'Please make sure the second dose vaccination date '
+                           'is not before the first dose vaccination date or '
+                           'the before the vaccination window period.'}
+                raise ValidationError(message)
 
     def validate_next_vaccination_dt(self):
+        """
+        Validate next vaccination datetime is not before the vaccination window
+        period.
+        """
         next_vaccination_dt = self.cleaned_data.get('next_vaccination_date')
-        appt = self.cleaned_data.get('subject_visit').appointment
-        visit_code = self.cleaned_data.get('subject_visit').visit_code
-        visit_definition = appt.visits.get(visit_code)
+        dose_received = self.cleaned_data.get('received_dose_before')
+        vaccination_datetime = self.cleaned_data.get('vaccination_date')
 
-        earliest_appt_date = (self.instance.timepoint_datetime -
-                              visit_definition.rlower).astimezone(
-                                  pytz.timezone('Africa/Gaborone'))
+        if vaccination_datetime and dose_received == FIRST_DOSE:
+            first_dose_dt = vaccination_datetime.date()
+            date_diff = relativedelta(next_vaccination_dt, first_dose_dt).days
 
-        latest_appt_date = (self.instance.timepoint_datetime +
-                            visit_definition.rupper).astimezone(
-                                pytz.timezone('Africa/Gaborone'))
-
-        if next_vaccination_dt:
-            if (next_vaccination_dt < earliest_appt_date or
-                    next_vaccination_dt > latest_appt_date):
+            if date_diff < 56:
                 message = {'next_vaccination_date':
-                           'The appointment date time cannot be outside the '
-                           'vaccination window period'}
+                           'The next vaccination date cannot be before the '
+                           'vaccination window period.'}
                 raise ValidationError(message)
+
+    def vaccination_details_model_obj(
+            self, dose_received='first_dose', subject_identifier=None):
+        try:
+            vaccination = self.vaccination_details_model_cls.objects.get(
+                subject_visit__subject_identifier=subject_identifier,
+                received_dose_before=dose_received)
+        except self.vaccination_details_model_cls.DoesNotExist:
+            if dose_received == FIRST_DOSE:
+                msg = {'received_dose_before':
+                       'Please capture the first dose vaccination details, before '
+                       'second dose vaccination.'}
+                raise ValidationError(msg)
+            pass
+        else:
+            return vaccination

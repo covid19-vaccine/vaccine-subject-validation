@@ -4,39 +4,43 @@ from edc_base.utils import get_utcnow, relativedelta
 from edc_constants.constants import NO, YES, OTHER, NOT_APPLICABLE
 
 from ..form_validators import VaccineDetailsFormValidator
-from ..constants import FIRST_DOSE
+from ..constants import FIRST_DOSE, SECOND_DOSE
 
-from .models import Appointment, SubjectVisit
+from .models import Appointment, SubjectVisit, VaccinationDetails
 from django.test.utils import tag
 
 
+@tag('vd')
 class VaccinationDetailsFormValidatorTests(TestCase):
 
     def setUp(self):
-        subject_identifier = '1234567'
+        self.subject_identifier = '1234567'
         appointment = Appointment.objects.create(
-            subject_identifier=subject_identifier,
+            subject_identifier=self.subject_identifier,
             appt_datetime=get_utcnow(),
             visit_code='1000',
             schedule_name='esr21_enrol_schedule')
         subject_visit = SubjectVisit.objects.create(
             appointment=appointment,
             schedule_name='esr21_enrol_schedule')
+        vaccination_details_cls = 'esr21_subject_validation.vaccinationdetails'
+        VaccineDetailsFormValidator.vaccination_details_cls = vaccination_details_cls
+
         self.data = {
             'subject_visit': subject_visit,
             'received_dose': YES,
-            'report_datetime': get_utcnow().date(),
+            'report_datetime': get_utcnow(),
             'received_dose_before': 'ABC',
             'vaccination_site': 'ABC',
-            'vaccination_date': 'ABC',
+            'vaccination_date': get_utcnow(),
             'admin_per_protocol': YES,
             'reason_not_per_protocol': None,
             'lot_number': '123',
-            'expiry_date': '01/01/2023',
+            'expiry_date': get_utcnow() + relativedelta(days=30),
             'provider_name': 'SPA',
             'location': 'Arm',
             'location_other': None,
-            'next_vaccination_date': 'ABSC',
+            'next_vaccination_date': (get_utcnow() + relativedelta(days=56)).date(),
 
         }
 
@@ -147,3 +151,42 @@ class VaccinationDetailsFormValidatorTests(TestCase):
 
         self.assertRaises(ValidationError, form.validate)
         self.assertIn('next_vaccination_date', form._errors)
+
+    def test_next_vaccination_before_window(self):
+        field_name = 'next_vaccination_date'
+
+        self.data['received_dose_before'] = FIRST_DOSE
+        self.data[field_name] = (get_utcnow() + relativedelta(days=55)).date()
+
+        form = VaccineDetailsFormValidator(cleaned_data=self.data)
+
+        self.assertRaises(ValidationError, form.validate)
+        self.assertIn('next_vaccination_date', form._errors)
+
+    def test_second_dose_dt_before_first(self):
+
+        self.data['received_dose_before'] = SECOND_DOSE
+        self.data['vaccination_date'] = get_utcnow() + relativedelta(days=1)
+        self.data['next_vaccination_date'] = None
+
+        appt = Appointment.objects.create(
+            subject_identifier=self.subject_identifier,
+            visit_code='1070',
+            schedule_name='esr21_fu_schedule',
+            appt_datetime=get_utcnow())
+        visit = SubjectVisit.objects.create(
+            appointment=appt,
+            schedule_name='esr21_fu_schedule')
+
+        self.data['subject_visit'] = visit
+
+        VaccinationDetails.objects.create(
+            subject_visit=visit,
+            received_dose_before=FIRST_DOSE,
+            vaccination_date=get_utcnow(),
+            next_vaccination_date=(get_utcnow() + relativedelta(days=56)).date())
+
+        form = VaccineDetailsFormValidator(cleaned_data=self.data)
+
+        self.assertRaises(ValidationError, form.validate)
+        self.assertIn('', form._errors)

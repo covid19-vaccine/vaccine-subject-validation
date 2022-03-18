@@ -86,3 +86,14 @@ class AdverseEvent(models.Model):
     serious_event = models.CharField(max_length=25, blank=True, null=True)
 
     special_interest_ae = models.CharField(max_length=25, blank=True, null=True)
+
+
+class VaccinationDetails(models.Model):
+
+    subject_visit = models.OneToOneField(SubjectVisit, on_delete=PROTECT)
+
+    received_dose_before = models.CharField(max_length=25)
+
+    vaccination_date = models.DateTimeField()
+
+    next_vaccination_date = models.DateField()
