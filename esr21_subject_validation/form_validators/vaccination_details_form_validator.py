@@ -4,9 +4,10 @@ from edc_constants.constants import YES, NO
 from edc_form_validators import FormValidator
 from .crf_form_validator import CRFFormValidator
 from ..constants import FIRST_DOSE, SECOND_DOSE
-
+from django.core.exceptions import ValidationError
 
 class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
+    edc_protocol = django_apps.get_app_config('edc_protocol')
 
     vaccination_details_cls = 'esr21_subject.vaccinationdetails'
 
@@ -15,6 +16,7 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
         return django_apps.get_model(self.vaccination_details_cls)
 
     def clean(self):
+        super().clean()
 
         required_fields = ['vaccination_site', 'vaccination_date',
                            'lot_number', 'expiry_date', 'provider_name']
@@ -37,6 +39,7 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
                          field_required='reason_not_per_protocol')
 
         self.validate_other_specify(field='location')
+        
 
         self.required_if(FIRST_DOSE,
                          field='received_dose_before',
@@ -45,8 +48,11 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
         self.validate_vaccination_date()
 
         self.validate_next_vaccination_dt()
+        
+        self.validate_first_dose_against_second_dose()
+        
+        self.validate_vaccination_date_against_consent_date()
 
-        super().clean()
 
     def validate_vaccination_date(self):
         """
@@ -109,3 +115,33 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
             pass
         else:
             return vaccination
+        
+        
+        self.validate_consent_date()
+
+    def validate_vaccination_date_against_consent_date(self):        
+        report_datetime = self.cleaned_data.get('subject_visit').report_datetime
+        vaccination_date = self.cleaned_data.get('vaccination_date')
+    
+        if vaccination_date < report_datetime:
+            message = {'vaccination_date': ('Vaccination date cannot be before visit report date.'
+                                    f' {report_datetime}.')}
+            
+            raise ValidationError(message)
+
+    def validate_first_dose_against_second_dose(self):  
+        current_dose = self.cleaned_data.get('received_dose_before')
+        subject_identifier = self.cleaned_data.get('subject_visit').subject_identifier
+        current_schedule = self.cleaned_data.get('subject_visit').appointment.schedule_name
+        schedule_names = ['esr21_fu_schedule','esr21_sub_fu_schedule']
+
+        if current_schedule in schedule_names:
+            if current_dose == 'second_dose':
+                try:
+                    self.vaccination_details_model_cls.objects.get(
+                    subject_visit__subject_identifier=subject_identifier, received_dose_before = 'first_dose')              
+                except self.vaccination_details_model_cls.DoesNotExist:            
+                    message = f'Vaccination details for the first dose do not exist'
+                    raise ValidationError(message)  
+                
+                
