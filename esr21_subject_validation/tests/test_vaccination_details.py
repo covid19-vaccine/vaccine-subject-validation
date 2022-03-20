@@ -220,3 +220,61 @@ class VaccinationDetailsFormValidatorTests(TestCase):
             form_validator.validate()
         except ValidationError as e:
             self.fail(f'ValidationError unexpectedly raised. Got{e}')
+     
+    def test_first_dose_against_second_dose(self):        
+        self.data['vaccination_date'] = get_utcnow() + relativedelta(days=1)
+
+        appt = Appointment.objects.create(
+            subject_identifier=self.subject_identifier,
+            visit_code='1000',
+            schedule_name='esr21_enrol_schedule',
+            appt_datetime=get_utcnow())
+  
+        visit = SubjectVisit.objects.create(
+            appointment=appt,
+            schedule_name='esr21_fu_schedule',
+            subject_identifier=self.subject_identifier,
+            report_datetime = get_utcnow())
+        
+        self.data['subject_visit'] = visit
+        self.data['received_dose_before'] = FIRST_DOSE
+        self.data['report_datetime'] = get_utcnow()
+        self.data['next_vaccination_date'] = (get_utcnow() + relativedelta(days=57)).date()
+
+        form = VaccineDetailsFormValidator(cleaned_data=self.data)
+        try:
+            form.validate()
+        except ValidationError as e:
+            self.fail(f'Received Dose Before unexpectedly raised. Got{e}')
+    
+  
+    def test_validate_vaccination_date_against_consent_date(self):
+        self.data['received_dose_before'] = FIRST_DOSE
+        
+        self.data['vaccination_date'] = get_utcnow() + relativedelta(days=1)
+        
+        appt = Appointment.objects.create(
+            subject_identifier=self.subject_identifier,
+            visit_code='1000',
+            schedule_name='esr21_enrol_schedule',
+            appt_datetime=get_utcnow())
+        
+        visit = SubjectVisit.objects.create(
+            appointment=appt,
+            schedule_name='esr21_enrol_schedule',
+            report_datetime = get_utcnow())
+
+        self.data['next_vaccination_date'] = (get_utcnow() + relativedelta(days=57)).date()
+
+        self.data['subject_visit'] = visit
+        self.data['report_datetime'] = get_utcnow()
+
+        form = VaccineDetailsFormValidator(cleaned_data=self.data)
+        
+        try:
+            form.validate()
+        except ValidationError as e:
+            self.fail(f'ValidationError unexpectedly raised. Got{e}')
+ 
+
+        
