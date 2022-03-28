@@ -1,3 +1,4 @@
+from bcrypt import re
 from django.apps import apps as django_apps
 from django.core.exceptions import ValidationError
 from edc_constants.constants import YES, NO
@@ -52,7 +53,10 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
         self.validate_first_dose_against_second_dose()
         
         self.validate_vaccination_date_against_consent_date()
-
+        
+        self.validate_expiry_dt_against_visit_dt()
+        
+        self.validate_next_vaccination_dt_against_visit_date()
 
     def validate_vaccination_date(self):
         """
@@ -122,11 +126,10 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
     def validate_vaccination_date_against_consent_date(self):        
         report_datetime = self.cleaned_data.get('subject_visit').report_datetime
         vaccination_date = self.cleaned_data.get('vaccination_date')
-    
+
         if vaccination_date < report_datetime:
-            message = {'vaccination_date': ('Vaccination date cannot be before visit report date.'
+            message = {'vaccination_date': ('Vaccination date cannot be before consent date.'
                                     f' {report_datetime}.')}
-            
             raise ValidationError(message)
 
     def validate_first_dose_against_second_dose(self):  
@@ -144,4 +147,27 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
                     message = f'Vaccination details for the first dose do not exist'
                     raise ValidationError(message)  
                 
-                
+    def validate_expiry_dt_against_visit_dt(self):        
+        report_datetime = self.cleaned_data.get('subject_visit').report_datetime
+        expiry_date = self.cleaned_data.get('expiry_date')
+        
+        report_dt = report_datetime.date()
+        if  expiry_date < report_dt:
+            message = {'expiry_date': ('Expiry date cannot be before the visit date.'
+                       f' {report_dt}.')}
+            raise ValidationError(message)       
+            
+        
+    def validate_next_vaccination_dt_against_visit_date(self):
+        report_datetime = self.cleaned_data.get('subject_visit').report_datetime
+        next_vaccination_dt = self.cleaned_data.get('next_vaccination_date')
+
+        if next_vaccination_dt:
+            report_dt = report_datetime.date()
+            if next_vaccination_dt < report_dt:
+                message = {'next_vaccination_date': ('Vaccination date cannot be before the visit report date.'
+                            f' {report_datetime}.')}
+                raise ValidationError(message) 
+               
+       
+            
