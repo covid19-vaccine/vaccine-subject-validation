@@ -1,11 +1,12 @@
 from django.db import models
 from django.db.models.deletion import PROTECT
+from django_crypto_fields.fields import EncryptedCharField
+from edc_base.model_fields import OtherCharField
 from edc_base.model_mixins import BaseUuidModel, ListModelMixin
 from edc_base.utils import get_utcnow
 
 
 class Appointment(BaseUuidModel):
-
     subject_identifier = models.CharField(max_length=25)
 
     appt_datetime = models.DateTimeField(default=get_utcnow)
@@ -20,7 +21,6 @@ class ListModel(ListModelMixin, BaseUuidModel):
 
 
 class EligibilityConfirmation(BaseUuidModel):
-
     screening_identifier = models.CharField(
         max_length=36,
         unique=True,
@@ -34,7 +34,6 @@ class EligibilityConfirmation(BaseUuidModel):
 
 
 class InformedConsent(BaseUuidModel):
-
     subject_identifier = models.CharField(max_length=25)
 
     screening_identifier = models.CharField(max_length=50)
@@ -59,7 +58,6 @@ class InformedConsent(BaseUuidModel):
 
 
 class SubjectVisit(BaseUuidModel):
-
     appointment = models.OneToOneField(Appointment, on_delete=PROTECT)
 
     subject_identifier = models.CharField(max_length=25)
@@ -80,7 +78,6 @@ class SubjectVisit(BaseUuidModel):
 
 
 class AdverseEvent(models.Model):
-
     subject_visit = models.OneToOneField(SubjectVisit, on_delete=PROTECT)
 
     serious_event = models.CharField(max_length=25, blank=True, null=True)
@@ -89,7 +86,6 @@ class AdverseEvent(models.Model):
 
 
 class VaccinationDetails(models.Model):
-
     subject_visit = models.OneToOneField(SubjectVisit, on_delete=PROTECT)
 
     received_dose_before = models.CharField(max_length=25)
@@ -97,3 +93,28 @@ class VaccinationDetails(models.Model):
     vaccination_date = models.DateTimeField()
 
     next_vaccination_date = models.DateField()
+    report_datetime = models.DateTimeField()
+
+    received_dose = models.CharField(max_length=3)
+
+    vaccination_site = models.CharField(max_length=30, blank=True, null=True)
+
+    location = models.CharField(max_length=30)
+
+    location_other = OtherCharField()
+
+    admin_per_protocol = models.CharField(max_length=3)
+
+    reason_not_per_protocol = models.CharField(max_length=100, blank=True, null=True)
+
+    lot_number = models.CharField(max_length=20, blank=True, null=True, )
+
+    kit_serial = models.CharField(max_length=30, blank=True, null=True, )
+
+    expiry_date = models.DateField(blank=True, null=True)
+
+    provider_name = EncryptedCharField(max_length=35, blank=True, null=True)
+
+    part_supervised = models.CharField(max_length=3)
+
+    adverse_event = models.CharField(max_length=3)
