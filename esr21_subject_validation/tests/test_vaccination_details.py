@@ -6,7 +6,7 @@ from edc_constants.constants import NO, YES, OTHER, NOT_APPLICABLE
 from ..form_validators import VaccineDetailsFormValidator
 from ..constants import FIRST_DOSE, SECOND_DOSE
 
-from .models import Appointment, SubjectVisit, VaccinationDetails
+from .models import Appointment, SubjectVisit, VaccinationDetails, VaccinationHistory
 from django.test.utils import tag
 
 
