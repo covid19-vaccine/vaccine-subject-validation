@@ -24,8 +24,11 @@ class VaccinationDetailsFormValidatorTests(TestCase):
         subject_visit = SubjectVisit.objects.create(
             appointment=appointment,
             schedule_name='esr21_enrol_schedule')
+        vaccination_history_cls = 'esr21_subject_validation.vaccinationhistory'
         vaccination_details_cls = 'esr21_subject_validation.vaccinationdetails'
+
         VaccineDetailsFormValidator.vaccination_details_cls = vaccination_details_cls
+        VaccineDetailsFormValidator.vaccination_history_cls = vaccination_history_cls
 
         self.appt_1070 = Appointment.objects.create(
             subject_identifier=self.subject_identifier,
