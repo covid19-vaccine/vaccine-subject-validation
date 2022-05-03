@@ -6,7 +6,7 @@ from edc_constants.constants import NO, YES, OTHER, NOT_APPLICABLE
 from ..form_validators import VaccineDetailsFormValidator
 from ..constants import FIRST_DOSE, SECOND_DOSE
 
-from .models import Appointment, SubjectVisit, VaccinationDetails
+from .models import Appointment, SubjectVisit, VaccinationDetails, VaccinationHistory
 from django.test.utils import tag
 
 
@@ -24,8 +24,11 @@ class VaccinationDetailsFormValidatorTests(TestCase):
         subject_visit = SubjectVisit.objects.create(
             appointment=appointment,
             schedule_name='esr21_enrol_schedule')
+        vaccination_history_cls = 'esr21_subject_validation.vaccinationhistory'
         vaccination_details_cls = 'esr21_subject_validation.vaccinationdetails'
+
         VaccineDetailsFormValidator.vaccination_details_cls = vaccination_details_cls
+        VaccineDetailsFormValidator.vaccination_history_cls = vaccination_history_cls
 
         self.appt_1070 = Appointment.objects.create(
             subject_identifier=self.subject_identifier,

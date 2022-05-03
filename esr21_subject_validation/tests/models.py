@@ -97,3 +97,14 @@ class VaccinationDetails(models.Model):
     vaccination_date = models.DateTimeField()
 
     next_vaccination_date = models.DateField()
+
+
+class VaccinationHistory(models.Model):
+
+    subject_identifier = models.CharField(max_length=25)
+
+    report_datetime = models.DateTimeField(default=get_utcnow)
+
+    received_vaccine = models.CharField(max_length=25)
+
+    dose_quantity = models.CharField(max_length=25)
