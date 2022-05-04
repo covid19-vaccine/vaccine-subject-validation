@@ -8,3 +8,13 @@ git+https://github.com/botswana-harvard/edc-model-admin.git@develop#egg=edc_mode
 git+https://github.com/botswana-harvard/edc-identifier.git@develop#egg=edc_identifier
 git+https://github.com/botswana-harvard/edc-protocol.git@develop#egg=edc_protocol
 git+https://github.com/botswana-harvard/edc-visit-tracking.git@develop#egg=edc_visit_tracking
+git+https://github.com/covid19-vaccine/esr21-labs.git@0.1.14#egg=esr21-labs
+
+django-cors-headers
+celery
+django-import_export
+django===3.1.4
+mysqlclient
+django-crypto-fields
+pyminizip
+django_q

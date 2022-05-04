@@ -9,8 +9,15 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+import configparser
+import os
+import sys
 from pathlib import Path
+
+from django.core.management.color import color_style
+
+# from .logging import LOGGING
+style = color_style()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,10 +30,24 @@ SECRET_KEY = 'hz_r6cyoz331&d(c*33t1fouupx8qjcju$4)rzok^8ixeg0v-3'
 
 APP_NAME = 'esr21_subject_validation'
 
+MAIN_APP = 'esr21'
+
+ETC_DIR = os.path.join('/etc/', MAIN_APP)
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+DEVICE_ID = 1
+
 ALLOWED_HOSTS = []
+
+CONFIG_FILE = f'{MAIN_APP}.ini'
+
+# Application definition
+CONFIG_PATH = os.path.join(ETC_DIR, CONFIG_FILE)
+sys.stdout.write(style.SUCCESS(f'  * Reading config from {CONFIG_FILE}\n'))
+config = configparser.ConfigParser()
+config.read(CONFIG_PATH)
 
 # Application definition
 
@@ -38,6 +59,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django_crypto_fields.apps.AppConfig',
     'edc_device.apps.AppConfig',
     'esr21_subject_validation.apps.EdcProtocolAppConfig',
     'esr21_subject_validation.apps.AppConfig',
@@ -66,10 +88,10 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-            ],
+                ],
+            },
         },
-    },
-]
+    ]
 
 WSGI_APPLICATION = 'esr21_subject_validation.wsgi.application'
 
@@ -80,8 +102,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -89,17 +111,17 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
+        },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
+        },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
+        },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+        },
+    ]
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
@@ -118,3 +140,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+DEVICE_ROLE = config['edc_device'].get('role')
+
+DASHBOARD_URL_NAMES = {}
