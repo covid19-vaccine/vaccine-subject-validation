@@ -2,13 +2,12 @@ from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
-from django.test import TestCase
-from django.test.utils import tag
+from django.test import TestCase, tag
 from edc_base.utils import get_utcnow
 from edc_constants.constants import NO, YES, OTHER, NOT_APPLICABLE
 
 from .models import Appointment, SubjectVisit, VaccinationDetails
-from ..constants import *
+from ..constants import FIRST_DOSE, SECOND_DOSE
 from ..form_validators import VaccineDetailsFormValidator
 
 
@@ -26,8 +25,11 @@ class VaccinationDetailsFormValidatorTests(TestCase):
         subject_visit = SubjectVisit.objects.create(
             appointment=appointment,
             schedule_name='esr21_enrol_schedule')
+        vaccination_history_cls = 'esr21_subject_validation.vaccinationhistory'
         vaccination_details_cls = 'esr21_subject_validation.vaccinationdetails'
+
         VaccineDetailsFormValidator.vaccination_details_cls = vaccination_details_cls
+        VaccineDetailsFormValidator.vaccination_history_cls = vaccination_history_cls
 
         self.appt_1070 = Appointment.objects.create(
             subject_identifier=self.subject_identifier,
@@ -61,7 +63,7 @@ class VaccinationDetailsFormValidatorTests(TestCase):
             'location_other': None,
             'next_vaccination_date': (get_utcnow() + relativedelta(days=56)).date(),
             'kit_serial': '123',
-            }
+        }
 
     def test_is_received_dose_required(self):
         field_name = 'received_dose_before'
@@ -401,6 +403,5 @@ class VaccinationDetailsFormValidatorTests(TestCase):
 
         vac1 = VaccinationDetails.objects.create(
             subject_visit=visit_1070,
-            **self.data,
-            )
+            **self.data,)
         vac1.save()
