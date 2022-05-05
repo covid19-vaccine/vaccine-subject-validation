@@ -8,6 +8,11 @@ from edc_form_validators import FormValidator
 
 class InformedConsentFormValidator(FormValidator):
     eligibility_confirmation_model = 'esr21_subject.eligibilityconfirmation'
+    informed_consent_model = 'esr21_subject.informedconsent'
+    
+    @property
+    def informed_consent_cls(self):
+        return django_apps.get_model(self.informed_consent_model)
 
     @property
     def eligibility_confirmation_cls(self):
@@ -70,13 +75,36 @@ class InformedConsentFormValidator(FormValidator):
             dob = self.cleaned_data.get('dob')
             consent_date = self.cleaned_data.get('consent_datetime').date()
             age_in_years = age_in_years = age(dob, consent_date).years
-
-            if (eligibility_confirmation.age_in_years
+            consent_dob = self.cleaned_data.get('consent')
+            
+            consent = self.informed_consent_cls.objects.filter(
+            screening_identifier=self.screening_identifier).order_by(
+                '-consent_datetime').first()
+            
+            if consent.version:
+                if (dob 
+                    and dob != consent_dob):
+                    message = {'dob':
+                                'The Date of birth does not '
+                                'match the dob from Consent'
+                                f' form. Expected \'{consent_dob}\' '
+                                }
+                    self._errors.update(message)
+                    raise ValidationError(message)
+                    
+            else:
+                if (eligibility_confirmation.age_in_years
                     and eligibility_confirmation.age_in_years != age_in_years):
-                message = {'dob':
-                               'The age derived from Date of birth does not '
-                               'match the age provided in the Eligibility Confirmation'
-                               f' form. Expected \'{eligibility_confirmation.age_in_years}\' '
-                               f'got \'{age_in_years}\''}
-                self._errors.update(message)
-                raise ValidationError(message)
+                    message = {'dob':
+                                'The age derived from Date of birth does not '
+                                'match the age provided in the Eligibility Confirmation'
+                                f' form. Expected \'{eligibility_confirmation.age_in_years}\' '
+                                f'got \'{age_in_years}\''}
+                    self._errors.update(message)
+                    raise ValidationError(message)
+               
+                
+                
+                
+
+            
