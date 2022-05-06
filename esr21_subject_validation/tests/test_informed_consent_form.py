@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-from django.test import TestCase, tag
+from django.test import TestCase
 from edc_base.utils import get_utcnow, relativedelta
 from edc_constants.constants import YES, MALE, FEMALE, OTHER
 
@@ -22,7 +22,7 @@ class TestSubjectConsentForm(TestCase):
             report_datetime=get_utcnow(),
             age_in_years=45)
         
-        consent = InformedConsent.objects.create(
+        InformedConsent.objects.create(
             screening_identifier=eligibility_confirmation.screening_identifier,
             subject_identifier='123-9871',
             dob = (get_utcnow() - relativedelta(years=45)).date()
@@ -40,10 +40,9 @@ class TestSubjectConsentForm(TestCase):
             'confirm_identity': '123425678',
             'identity_type': 'national_identity_card',
             'gender': FEMALE,
-            'citizen': YES,
-            'consent': consent}
+            'citizen': YES}
         
-    @tag('cc')
+   
     def test_consent_dob_match_consent_dob_years(self):
         form_validator = InformedConsentFormValidator(
             cleaned_data=self.consent_options)
@@ -51,6 +50,16 @@ class TestSubjectConsentForm(TestCase):
             form_validator.validate()
         except ValidationError as e:
             self.fail(f'ValidationError unexpectedly raised. Got{e}')
+            
+    def test_eligibility_age_not_valid(self):
+        InformedConsent.objects.all().delete()
+        
+        self.consent_options['dob'] = (get_utcnow() - relativedelta(years=46)).date()
+
+        form_validator = InformedConsentFormValidator(
+            cleaned_data=self.consent_options)
+        self.assertRaises(ValidationError, form_validator.validate)
+        self.assertIn('dob', form_validator._errors)
 
     def test_consent_dob_mismatch_consent_dob_years(self):
         self.consent_options['dob'] = (get_utcnow() - relativedelta(years=40)).date()

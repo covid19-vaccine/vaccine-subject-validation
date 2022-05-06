@@ -23,7 +23,7 @@ class InformedConsentFormValidator(FormValidator):
         super().clean()
 
         self.validate_gender_other()
-        self.validate_dob()
+        self.validate_consent_dob_valid()
         self.validate_identity_number(cleaned_data=self.cleaned_data)
 
     def validate_gender_other(self):
@@ -63,31 +63,28 @@ class InformedConsentFormValidator(FormValidator):
                                'number.'}
                     self._errors.update(msg)
                     raise ValidationError(msg)
-
-    def validate_dob(self):
+          
+                
+    def validate_consent_dob_valid(self):
+        consent_exist = self.informed_consent_cls.objects.filter(screening_identifier=self.screening_identifier)
+        dob = self.cleaned_data.get('dob')
+        consent_date = self.cleaned_data.get('consent_datetime').date()
+        age_in_years = age(dob, consent_date).years
+        
         try:
             eligibility_confirmation = self.eligibility_confirmation_cls.objects.get(
-                screening_identifier=self.screening_identifier)
+                screening_identifier=self.screening_identifier)  
         except self.eligibility_confirmation_cls.DoesNotExist:
             raise ValidationError('Please complete the Eligibility Confirmation '
                                   'form first.')
+               
         else:
-            dob = self.cleaned_data.get('dob')
-            consent_date = self.cleaned_data.get('consent_datetime').date()
-            age_in_years = age_in_years = age(dob, consent_date).years
-            consent_dob = self.cleaned_data.get('consent')
-            
-            consent = self.informed_consent_cls.objects.filter(
-            screening_identifier=self.screening_identifier).order_by(
-                '-consent_datetime').first()
-            
-            if consent.version:
-                if (dob 
-                    and dob != consent_dob):
-                    message = {'dob':
-                                'The Date of birth does not '
-                                'match the dob from Consent'
-                                f' form. Expected \'{consent_dob}\' '
+            if consent_exist:
+                consent = consent_exist.order_by('-consent_datetime').first()
+                if (dob and dob != consent.dob):
+                    message = {'dob':'The Date of birth does not '
+                                        'match the dob from Consent'
+                                        f'form. Expected \'{consent.dob}\' '
                                 }
                     self._errors.update(message)
                     raise ValidationError(message)
@@ -95,13 +92,17 @@ class InformedConsentFormValidator(FormValidator):
             else:
                 if (eligibility_confirmation.age_in_years
                     and eligibility_confirmation.age_in_years != age_in_years):
-                    message = {'dob':
-                                'The age derived from Date of birth does not '
-                                'match the age provided in the Eligibility Confirmation'
-                                f' form. Expected \'{eligibility_confirmation.age_in_years}\' '
-                                f'got \'{age_in_years}\''}
-                    self._errors.update(message)
-                    raise ValidationError(message)
+                        message = {'dob':
+                                        'The age derived from Date of birth does not '
+                                        'match the age provided in the Eligibility Confirmation'
+                                        f' form. Expected \'{eligibility_confirmation.age_in_years}\' '
+                                        f'got \'{age_in_years}\''}
+                        self._errors.update(message)
+                        raise ValidationError(message)    
+       
+                       
+                
+                    
                
                 
                 
