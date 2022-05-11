@@ -1,14 +1,13 @@
-from datetime import timedelta
-
-from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
-from django.test import TestCase, tag
-from edc_base.utils import get_utcnow
+from django.test import TestCase
+from edc_base.utils import get_utcnow, relativedelta
 from edc_constants.constants import NO, YES, OTHER, NOT_APPLICABLE
 
-from .models import Appointment, SubjectVisit, VaccinationDetails
-from ..constants import FIRST_DOSE, SECOND_DOSE
 from ..form_validators import VaccineDetailsFormValidator
+from ..constants import FIRST_DOSE, SECOND_DOSE
+
+from .models import Appointment, SubjectVisit, VaccinationDetails, VaccinationHistory
+from django.test.utils import tag
 
 
 @tag('vd')
@@ -43,15 +42,15 @@ class VaccinationDetailsFormValidatorTests(TestCase):
 
         VaccinationDetails.objects.create(
             subject_visit=subject_visit,
-            report_datetime=get_utcnow(),
             received_dose_before=FIRST_DOSE,
             vaccination_date=get_utcnow(),
             next_vaccination_date=(get_utcnow() + relativedelta(days=56)).date())
 
         self.data = {
+            'subject_visit': subject_visit,
             'received_dose': YES,
             'report_datetime': get_utcnow(),
-            'received_dose_before': FIRST_DOSE,
+            'received_dose_before': 'ABC',
             'vaccination_site': 'ABC',
             'vaccination_date': get_utcnow(),
             'admin_per_protocol': YES,
@@ -62,7 +61,7 @@ class VaccinationDetailsFormValidatorTests(TestCase):
             'location': 'Arm',
             'location_other': None,
             'next_vaccination_date': (get_utcnow() + relativedelta(days=56)).date(),
-            'kit_serial': '123',
+
         }
 
     def test_is_received_dose_required(self):
@@ -122,16 +121,6 @@ class VaccinationDetailsFormValidatorTests(TestCase):
 
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn(field_name, form_validator._errors)
-
-    def test_kit_serial_required(self):
-        field_name = 'kit_serial'
-
-        self.data[field_name] = None
-
-        form = VaccineDetailsFormValidator(cleaned_data=self.data)
-
-        self.assertRaises(ValidationError, form.validate)
-        self.assertIn(field_name, form._errors)
 
     def test_expiry_date_required(self):
         field_name = 'expiry_date'
@@ -255,7 +244,7 @@ class VaccinationDetailsFormValidatorTests(TestCase):
         self.data['received_dose_before'] = FIRST_DOSE
         self.data['report_datetime'] = get_utcnow()
         self.data['next_vaccination_date'] = (
-                get_utcnow() + relativedelta(days=57)).date()
+                    get_utcnow() + relativedelta(days=57)).date()
         self.data['expiry_date'] = (get_utcnow() + relativedelta(days=1)).date()
 
         form = VaccineDetailsFormValidator(cleaned_data=self.data)
@@ -279,7 +268,7 @@ class VaccinationDetailsFormValidatorTests(TestCase):
             report_datetime=get_utcnow())
 
         self.data['next_vaccination_date'] = (
-                get_utcnow() + relativedelta(days=57)).date()
+                    get_utcnow() + relativedelta(days=57)).date()
 
         self.data['subject_visit'] = visit
         self.data['report_datetime'] = get_utcnow()
@@ -319,7 +308,7 @@ class VaccinationDetailsFormValidatorTests(TestCase):
 
         self.data['received_dose_before'] = FIRST_DOSE
         self.data['next_vaccination_date'] = (
-                get_utcnow() + relativedelta(days=55)).date()
+                    get_utcnow() + relativedelta(days=55)).date()
 
         appt = Appointment.objects.create(
             subject_identifier=self.subject_identifier,
@@ -341,67 +330,5 @@ class VaccinationDetailsFormValidatorTests(TestCase):
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn(field_name, form_validator._errors)
 
-    @tag('injections')
-    def test_vial_10_injections(self):
-        subject_identifiers = ['222222', '222223', '222233', '222224', '222225', '222226',
-                               '222227', '222228', '222229', '222231', '222232']
-        for subject_identifier in subject_identifiers:
-            self.create_vac_details(subject_identifier)
 
-        subject_identifier = subject_identifiers[10]
-        appt_1070 = Appointment.objects.create(
-            subject_identifier=subject_identifier,
-            visit_code='1070',
-            schedule_name='esr21_fu_schedule',
-            appt_datetime=get_utcnow())
 
-        visit_1070 = SubjectVisit.objects.create(
-            appointment=appt_1070,
-            schedule_name='esr21_fu_schedule')
-
-        self.data['subject_visit'] = visit_1070
-        self.data['report_datetime'] = get_utcnow()
-
-        form_validator = VaccineDetailsFormValidator(cleaned_data=self.data)
-
-        self.assertRaises(ValidationError, form_validator.validate)
-        self.assertIn('kit_serial', form_validator._errors)
-
-    @tag('injections_time')
-    def test_vial_10_injections(self):
-        subject_identifier = '222222'
-        self.create_vac_details(subject_identifier)
-        subject_identifier = '222221'
-        appt_1070 = Appointment.objects.create(
-            subject_identifier=subject_identifier,
-            visit_code='1070',
-            schedule_name='esr21_fu_schedule',
-            appt_datetime=get_utcnow())
-
-        visit_1070 = SubjectVisit.objects.create(
-            appointment=appt_1070,
-            schedule_name='esr21_fu_schedule')
-
-        self.data['subject_visit'] = visit_1070
-        self.data['report_datetime'] = get_utcnow() + timedelta(hours=7)
-
-        form_validator = VaccineDetailsFormValidator(cleaned_data=self.data)
-
-        self.assertRaises(ValidationError, form_validator.validate)
-        self.assertIn('kit_serial', form_validator._errors)
-
-    def create_vac_details(self, subject_identifier):
-        appt_1070 = Appointment.objects.create(
-            subject_identifier=subject_identifier,
-            visit_code='1070',
-            schedule_name='esr21_fu_schedule',
-            appt_datetime=get_utcnow())
-
-        visit_1070 = SubjectVisit.objects.create(
-            appointment=appt_1070,
-            schedule_name='esr21_fu_schedule')
-
-        vac1 = VaccinationDetails.objects.create(
-            subject_visit=visit_1070,
-            **self.data,)
-        vac1.save()

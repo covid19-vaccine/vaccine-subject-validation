@@ -7,7 +7,6 @@ class ESR21FormValidatorMixin:
 
     eligibility_confirmation_model = 'esr21_subject.eligibilityconfirmation'
     informed_consent_model = 'esr21_subject.informedconsent'
-    vaccine_details_model = 'esr21_subject.vaccinedetails'
 
     @property
     def eligibility_confirmation_cls(self):
@@ -16,10 +15,6 @@ class ESR21FormValidatorMixin:
     @property
     def informed_consent_cls(self):
         return django_apps.get_model(self.informed_consent_model)
-
-    @property
-    def vaccine_details_cls(self):
-        return django_apps.get_model(self.vaccine_details_model)
 
     def validate_against_consent_datetime(self, report_datetime):
         """Returns an instance of the current informed consent or

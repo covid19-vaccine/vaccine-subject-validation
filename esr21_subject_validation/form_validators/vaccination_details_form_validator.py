@@ -1,10 +1,7 @@
-from datetime import datetime, timedelta
-
 from django.apps import apps as django_apps
 from django.core.exceptions import ValidationError
 from edc_constants.constants import YES, NO
 from edc_form_validators import FormValidator
-
 from .crf_form_validator import CRFFormValidator
 from ..constants import FIRST_DOSE, SECOND_DOSE
 
@@ -71,8 +68,7 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
         """
         subject_identifier = self.cleaned_data.get('subject_visit').subject_identifier
 
-        current_schedule = self.cleaned_data.get(
-            'subject_visit').appointment.schedule_name
+        current_schedule = self.cleaned_data.get('subject_visit').appointment.schedule_name
         schedule_names = ['esr21_fu_schedule', 'esr21_sub_fu_schedule']
         vaccination_history = self.vaccination_history_model_obj(
             subject_identifier=subject_identifier)
@@ -98,9 +94,9 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
 
             if second_before_first or second_lt_window:
                 message = {'vaccination_date':
-                               'Please make sure the second dose vaccination date '
-                               'is not before the first dose vaccination date or '
-                               'the before the vaccination window period.'}
+                           'Please make sure the second dose vaccination date '
+                           'is not before the first dose vaccination date or '
+                           'the before the vaccination window period.'}
                 raise ValidationError(message)
 
     def validate_next_vaccination_dt(self):
@@ -118,8 +114,8 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
 
             if date_diff < 56:
                 message = {'next_vaccination_date':
-                               'The next vaccination date cannot be before the '
-                               'vaccination window period.'}
+                           'The next vaccination date cannot be before the '
+                           'vaccination window period.'}
                 raise ValidationError(message)
 
     def vaccination_details_model_obj(
@@ -131,8 +127,8 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
         except self.vaccination_details_model_cls.DoesNotExist:
             if dose_received == FIRST_DOSE:
                 msg = {'received_dose_before':
-                           'Please capture the first dose vaccination details, '
-                           'before second dose vaccination.'}
+                       'Please capture the first dose vaccination details, '
+                       'before second dose vaccination.'}
                 raise ValidationError(msg)
             pass
         else:
@@ -155,15 +151,14 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
 
         if vaccination_date < report_datetime:
             message = {'vaccination_date':
-                           ('Vaccination date cannot be before visit report date.'
-                            f' {report_datetime}.')}
+                       ('Vaccination date cannot be before visit report date.'
+                        f' {report_datetime}.')}
             raise ValidationError(message)
 
     def validate_first_dose_against_second_dose(self):
         current_dose = self.cleaned_data.get('received_dose_before')
         subject_identifier = self.cleaned_data.get('subject_visit').subject_identifier
-        current_schedule = self.cleaned_data.get(
-            'subject_visit').appointment.schedule_name
+        current_schedule = self.cleaned_data.get('subject_visit').appointment.schedule_name
         schedule_names = ['esr21_fu_schedule', 'esr21_sub_fu_schedule']
 
         if current_schedule in schedule_names:
@@ -183,7 +178,7 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
         report_dt = report_datetime.date()
         if expiry_date < report_dt:
             message = {'expiry_date':
-                           f'Expiry date cannot be before the visit date. {report_dt}.'}
+                       f'Expiry date cannot be before the visit date. {report_dt}.'}
             raise ValidationError(message)
 
     def validate_next_vaccination_dt_against_visit_date(self):
@@ -194,45 +189,6 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
             report_dt = report_datetime.date()
             if next_vaccination_dt < report_dt:
                 message = {'next_vaccination_date':
-                               ('Vaccination date cannot be before the visit report'
-                                f' date. {report_datetime}.')}
+                           ('Vaccination date cannot be before the visit report'
+                            f' date. {report_datetime}.')}
                 raise ValidationError(message)
-
-    # def validate_vial_10_injections(self):
-    #     """
-    #     Raise an error if more than 10 forms have the same kit serial number
-    #     """
-    #     kit_serial_field_val = self.cleaned_data.get('kit_serial')
-    #     try:
-    #         total_forms = self.vaccination_details_model_cls.objects.filter(
-    #             kit_serial=kit_serial_field_val
-    #         ).count()
-    #     except self.vaccination_details_model_cls.DoesNotExist:
-    #         pass
-    #     else:
-    #         if total_forms == 10:
-    #             message = {'kit_serial': (
-    #                 f'More than 10 people have been vaccinated from vial '
-    #                 f'{kit_serial_field_val}')
-    #             }
-    #             raise ValidationError(message)
-    #
-    # def validate_vial_expiration(self):
-    #     """
-    #     Raise an error if the oldest and the current forms of the same kit serial number
-    #     are more than 6 hours apart
-    #     """
-    #     kit_serial_field_val = self.cleaned_data.get('kit_serial')
-    #     last_vac = self.vaccination_details_model_cls.objects.filter(
-    #         kit_serial=kit_serial_field_val
-    #     ).order_by('report_datetime').first()
-    #     time_threshold = datetime.now() - timedelta(hours=6)
-    #     import pdb;
-    #     pdb.set_trace()
-    #     if last_vac and (last_vac.report_datetime.time() > time_threshold.time()):
-    #         message = {'kit_serial': (
-    #             f'Participant can not receive drug from vial of serial kit'
-    #             f'{kit_serial_field_val}, this drug was first punctured more than 6 '
-    #             f'hours ago')
-    #         }
-    #         raise ValidationError(message)
