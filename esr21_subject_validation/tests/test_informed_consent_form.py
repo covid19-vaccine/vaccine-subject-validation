@@ -5,28 +5,17 @@ from edc_constants.constants import YES, MALE, FEMALE, OTHER
 
 from ..form_validators import InformedConsentFormValidator
 from .models import EligibilityConfirmation
-from .models import InformedConsent
 
 
 class TestSubjectConsentForm(TestCase):
 
     def setUp(self):
         InformedConsentFormValidator.eligibility_confirmation_model = \
-            'esr21_subject_validation.eligibilityconfirmation'    
-            
-        informed_consent_model = 'esr21_subject_validation.informedconsent'
-
-        InformedConsentFormValidator.informed_consent_model = informed_consent_model
+            'esr21_subject_validation.eligibilityconfirmation'
 
         eligibility_confirmation = EligibilityConfirmation.objects.create(
             report_datetime=get_utcnow(),
             age_in_years=45)
-        
-        InformedConsent.objects.create(
-            screening_identifier=eligibility_confirmation.screening_identifier,
-            subject_identifier='123-9871',
-            dob = (get_utcnow() - relativedelta(years=45)).date()
-        )  
 
         self.consent_options = {
             'screening_identifier': eligibility_confirmation.screening_identifier,
@@ -41,8 +30,7 @@ class TestSubjectConsentForm(TestCase):
             'identity_type': 'national_identity_card',
             'gender': FEMALE,
             'citizen': YES}
-        
-   
+
     def test_consent_dob_match_consent_dob_years(self):
         form_validator = InformedConsentFormValidator(
             cleaned_data=self.consent_options)
@@ -50,16 +38,6 @@ class TestSubjectConsentForm(TestCase):
             form_validator.validate()
         except ValidationError as e:
             self.fail(f'ValidationError unexpectedly raised. Got{e}')
-            
-    def test_eligibility_age_not_valid(self):
-        InformedConsent.objects.all().delete()
-        
-        self.consent_options['dob'] = (get_utcnow() - relativedelta(years=46)).date()
-
-        form_validator = InformedConsentFormValidator(
-            cleaned_data=self.consent_options)
-        self.assertRaises(ValidationError, form_validator.validate)
-        self.assertIn('dob', form_validator._errors)
 
     def test_consent_dob_mismatch_consent_dob_years(self):
         self.consent_options['dob'] = (get_utcnow() - relativedelta(years=40)).date()
@@ -113,6 +91,3 @@ class TestSubjectConsentForm(TestCase):
             cleaned_data=self.consent_options)
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn('identity', form_validator._errors)
-
-
-    
