@@ -35,22 +35,15 @@ class VaccinationHistoryFormValidator(FormValidator):
                 '2',
                 field='dose_quantity',
                 field_required=dose2_field)
-        if 'janssen' == self.cleaned_data['dose1_product_name'] and\
-                self.cleaned_data['dose2_product_name']:
+
+        dose_1 = self.cleaned_data['dose1_product_name']
+        dose_2 = self.cleaned_data['dose2_product_name']
+        num_of_doses = self.cleaned_data['dose_quantity']
+
+        if num_of_doses == '2' and 'janssen' in [dose_2, dose_1]:
             message = {
                 'dose2_product_name':
-                    'Participant has received Johnson & Johnson and '
-                    f"{ self.cleaned_data['dose2_product_name']} therefore "
-                    'they are not eligible to participate'
-            }
-            raise ValidationError(message)
-
-        if 'janssen' == self.cleaned_data['dose2_product_name'] and\
-                self.cleaned_data['dose1_product_name']:
-            message = {
-                'dose1_product_name':
-                    'Participant has received Johnson & Johnson and '
-                    f"{ self.cleaned_data['dose1_product_name']} therefore "
-                    'they are not eligible to participate'
+                    f'Participant has received {dose_1} and '
+                    f'{dose_2} therefore they are not eligible to participate'
             }
             raise ValidationError(message)
