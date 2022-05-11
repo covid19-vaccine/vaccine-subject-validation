@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from edc_constants.constants import YES
 from edc_form_validators import FormValidator
 
@@ -34,3 +35,22 @@ class VaccinationHistoryFormValidator(FormValidator):
                 '2',
                 field='dose_quantity',
                 field_required=dose2_field)
+        if 'janssen' == self.cleaned_data['dose1_product_name'] and\
+                self.cleaned_data['dose2_product_name']:
+            message = {
+                'dose2_product_name':
+                    'Participant has received Johnson & Johnson and '
+                    f"{ self.cleaned_data['dose2_product_name']} therefore "
+                    'they are not eligible to participate'
+            }
+            raise ValidationError(message)
+
+        if 'janssen' == self.cleaned_data['dose2_product_name'] and\
+                self.cleaned_data['dose1_product_name']:
+            message = {
+                'dose1_product_name':
+                    'Participant has received Johnson & Johnson and '
+                    f"{ self.cleaned_data['dose1_product_name']} therefore "
+                    'they are not eligible to participate'
+            }
+            raise ValidationError(message)
