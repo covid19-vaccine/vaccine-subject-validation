@@ -218,15 +218,14 @@ class VaccinationDetailsFormValidatorTests(TestCase):
         self.data['subject_visit'] = self.visit_1070
         self.data['expiry_date'] = (get_utcnow() + relativedelta(days=1)).date()
 
-
         form_validator = VaccineDetailsFormValidator(cleaned_data=self.data)
 
         try:
             form_validator.validate()
         except ValidationError as e:
             self.fail(f'ValidationError unexpectedly raised. Got{e}')
-     
-    def test_first_dose_against_second_dose(self):        
+
+    def test_first_dose_against_second_dose(self):
         self.data['vaccination_date'] = get_utcnow() + relativedelta(days=1)
 
         appt = Appointment.objects.create(
@@ -234,17 +233,18 @@ class VaccinationDetailsFormValidatorTests(TestCase):
             visit_code='1000',
             schedule_name='esr21_enrol_schedule',
             appt_datetime=get_utcnow())
-  
+
         visit = SubjectVisit.objects.create(
             appointment=appt,
             schedule_name='esr21_fu_schedule',
             subject_identifier=self.subject_identifier,
-            report_datetime = get_utcnow())
-        
+            report_datetime=get_utcnow())
+
         self.data['subject_visit'] = visit
         self.data['received_dose_before'] = FIRST_DOSE
         self.data['report_datetime'] = get_utcnow()
-        self.data['next_vaccination_date'] = (get_utcnow() + relativedelta(days=57)).date()
+        self.data['next_vaccination_date'] = (
+                    get_utcnow() + relativedelta(days=57)).date()
         self.data['expiry_date'] = (get_utcnow() + relativedelta(days=1)).date()
 
         form = VaccineDetailsFormValidator(cleaned_data=self.data)
@@ -252,23 +252,23 @@ class VaccinationDetailsFormValidatorTests(TestCase):
             form.validate()
         except ValidationError as e:
             self.fail(f'Received Dose Before unexpectedly raised. Got{e}')
-    
+
     def test_validate_vaccination_date_against_consent_date(self):
         self.data['received_dose_before'] = FIRST_DOSE
-        
-        
+
         appt = Appointment.objects.create(
             subject_identifier=self.subject_identifier,
             visit_code='1000',
             schedule_name='esr21_enrol_schedule',
             appt_datetime=get_utcnow())
-        
+
         visit = SubjectVisit.objects.create(
             appointment=appt,
             schedule_name='esr21_enrol_schedule',
-            report_datetime = get_utcnow())
+            report_datetime=get_utcnow())
 
-        self.data['next_vaccination_date'] = (get_utcnow() + relativedelta(days=57)).date()
+        self.data['next_vaccination_date'] = (
+                    get_utcnow() + relativedelta(days=57)).date()
 
         self.data['subject_visit'] = visit
         self.data['report_datetime'] = get_utcnow()
@@ -277,10 +277,9 @@ class VaccinationDetailsFormValidatorTests(TestCase):
         form_validator = VaccineDetailsFormValidator(cleaned_data=self.data)
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn('vaccination_date', form_validator._errors)
-      
 
-    def test_validate_expiry_dt_against_visit_dt(self): 
-        
+    def test_validate_expiry_dt_against_visit_dt(self):
+
         field_name = 'expiry_date'
         self.data['next_vaccination_date'] = None
 
@@ -289,48 +288,47 @@ class VaccinationDetailsFormValidatorTests(TestCase):
             visit_code='1000',
             schedule_name='esr21_enrol_schedule',
             appt_datetime=get_utcnow())
-        
+
         visit = SubjectVisit.objects.create(
             appointment=appt,
             schedule_name='esr21_enrol_schedule',
-            report_datetime = get_utcnow())
-        
+            report_datetime=get_utcnow())
+
         self.data['vaccination_date'] = get_utcnow()
         self.data['subject_visit'] = visit
         self.data['report_datetime'] = get_utcnow()
         self.data['expiry_date'] = (get_utcnow() - relativedelta(days=1)).date()
 
-
         form_validator = VaccineDetailsFormValidator(cleaned_data=self.data)
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn(field_name, form_validator._errors)
-       
+
     def test_validate_next_vaccination_dt_against_visit_date(self):
         field_name = 'next_vaccination_date'
 
         self.data['received_dose_before'] = FIRST_DOSE
-        self.data['next_vaccination_date'] = (get_utcnow() + relativedelta(days=55)).date()
+        self.data['next_vaccination_date'] = (
+                    get_utcnow() + relativedelta(days=55)).date()
 
         appt = Appointment.objects.create(
             subject_identifier=self.subject_identifier,
             visit_code='1000',
             schedule_name='esr21_enrol_schedule',
             appt_datetime=get_utcnow())
-        
+
         visit = SubjectVisit.objects.create(
             appointment=appt,
             schedule_name='esr21_enrol_schedule',
-            report_datetime = get_utcnow())
-        
+            report_datetime=get_utcnow())
+
         self.data['subject_visit'] = visit
         self.data['report_datetime'] = get_utcnow()
         self.data['expiry_date'] = (get_utcnow() + relativedelta(days=50)).date()
-      
+
         form_validator = VaccineDetailsFormValidator(cleaned_data=self.data)
 
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn(field_name, form_validator._errors)
 
- 
 
 
