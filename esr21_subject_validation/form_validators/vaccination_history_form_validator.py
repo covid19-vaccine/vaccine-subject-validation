@@ -73,7 +73,7 @@ class VaccinationHistoryFormValidator(FormValidator):
         message = {
             'dose_quantity': f'The participant has received {vac_details_count} doses'
                              f' of AstraZeneca (AZD 1222), Please correct your entry'}
-        if not str(vac_details_count) == dose_received and not (
+        if str(vac_details_count) == dose_received and not (
                 dose1_product_name == 'azd_1222' or dose2_product_name == 'azd_1222'):
             raise ValidationError(message)
 
