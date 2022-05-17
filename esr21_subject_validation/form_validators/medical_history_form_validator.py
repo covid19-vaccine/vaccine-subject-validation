@@ -19,4 +19,8 @@ class MedicalHistoryFormValidator(CRFFormValidator, FormValidator):
                                m2m_field='comorbidities',
                                field_other='comorbidities_other')
 
+        self.required_if(YES,
+                         field='condition_related_meds',
+                         field_required='rel_conc_meds')
+
         super().clean()
