@@ -13,7 +13,7 @@ class DemographicsDataFormValidator(FormValidator):
         super().clean()
 
         """
-        Will make the {varable}_other required 
+        Will make the {varable}_other required
         """
         self.validate_other_specify(field='ethnicity')
         self.validate_other_specify(field='employment_status')
