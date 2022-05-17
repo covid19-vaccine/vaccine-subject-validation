@@ -2,8 +2,9 @@ from django.apps import apps as django_apps
 from django.core.exceptions import ValidationError
 from edc_constants.constants import YES, NO
 from edc_form_validators import FormValidator
-from .crf_form_validator import CRFFormValidator
+
 from ..constants import FIRST_DOSE, SECOND_DOSE
+from .crf_form_validator import CRFFormValidator
 
 
 class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
@@ -150,7 +151,7 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
         vaccination_date = self.cleaned_data.get('vaccination_date')
 
         if vaccination_date and vaccination_date < report_datetime:
-                message = {'vaccination_date':
+            message = {'vaccination_date':
                            ('Vaccination date cannot be before visit report date.'
                             f' {report_datetime}.')}
             raise ValidationError(message)
