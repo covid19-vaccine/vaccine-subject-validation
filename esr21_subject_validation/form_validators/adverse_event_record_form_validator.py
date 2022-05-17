@@ -8,11 +8,10 @@ class AdverseEventRecordFormValidator(FormValidator):
     def clean(self):
         cleaned_data = self.cleaned_data
         self.validate_ae_end_date(cleaned_data=cleaned_data)
-        self.validate_outcome(cleaned_data=cleaned_data)
+        self.validate_outcome()
         self.validate_maae()
         self.validate_treatment_given()
         self.validate_discontinuation()
-        self.validate_ae_death_status(cleaned_data=cleaned_data)
 
     def validate_ae_end_date(self, cleaned_data=None):
         self.required_if(
@@ -30,22 +29,7 @@ class AdverseEventRecordFormValidator(FormValidator):
             self._errors.update(message)
             raise ValidationError(message)
 
-    def validate_outcome(self, cleaned_data=None):
-        status = cleaned_data.get('status')
-        outcome = cleaned_data.get('outcome')
-        if status == 'resolved':
-            if outcome not in ['resolved', 'resolved_with_sequelae']:
-                message = {'outcome':
-                           f'Status of the AE is {status}, please revise the outcome'}
-                self._errors.update(message)
-                raise ValidationError(message)
-        else:
-            if outcome in ['resolved', 'resolved_with_sequelae']:
-                message = {'outcome':
-                           f'Status of the AE is {status}, please revise the outcome'}
-                self._errors.update(message)
-                raise ValidationError(message)
-
+    def validate_outcome(self):
         self.required_if(
             'resolved_with_sequelae',
             field='outcome',
@@ -68,17 +52,3 @@ class AdverseEventRecordFormValidator(FormValidator):
             YES,
             field='ae_study_discontinued',
             field_required='discontn_dt')
-
-    def validate_ae_death_status(self, cleaned_data=None):
-        status = cleaned_data.get('status')
-        outcome = cleaned_data.get('outcome')
-        if status and status == 'death' and outcome != 'fatal':
-                msg = {'outcome':
-                       'Status of the AE is death, revise the outcome to fatal/death'}
-                self._errors.update(msg)
-                raise ValidationError(msg)
-        elif status != 'death' and outcome == 'fatal':
-            msg = {'outcome':
-                   'Status of the AE is not death, outcome can not be fatal/death'}
-            self._errors.update(msg)
-            raise ValidationError(msg)

@@ -5,8 +5,10 @@ from edc_constants.constants import NO, YES
 
 from ..form_validators import AdverseEventRecordFormValidator
 from .models import Appointment, SubjectVisit
+from django.test.utils import tag
 
 
+@tag('ae')
 class TestAdverseEventRecordFormValidator(TestCase):
 
     def setUp(self):
@@ -20,7 +22,6 @@ class TestAdverseEventRecordFormValidator(TestCase):
         self.ae_options = {
             'subject_visit': subject_visit,
             'start_date': get_utcnow().date(),
-            'status': 'ongoing',
             'ae_grade': 'mild',
             'study_treatmnt_rel': 'not_related',
             'nonstudy_treatmnt_rel': 'related',
@@ -34,22 +35,13 @@ class TestAdverseEventRecordFormValidator(TestCase):
             'ae_study_discontinued': NO,
             'covid_related_ae': YES}
 
-    def test_ae_status_resolved_end_date_required(self):
-        """ Assert that the AE end date raises an error if status is resolved
-            and end date is missing.
-        """
-        self.ae_options.update(status='resolved',)
-        form_validator = AdverseEventRecordFormValidator(cleaned_data=self.ae_options)
-        self.assertRaises(ValidationError, form_validator.validate)
-        self.assertIn('stop_date', form_validator._errors)
-
     def test_ae_status_resolved_end_date_valid(self):
         """ Tests if the AE status is `resolved` and end date is given, cleaned
             data validates or fails the tests if the Validation Error is raised
             unexpectedly.
+            TO DO: Refactor!!
         """
-        self.ae_options.update(status='resolved',
-                               stop_date=get_utcnow().date(),
+        self.ae_options.update(stop_date=get_utcnow().date(),
                                outcome='resolved')
         form_validator = AdverseEventRecordFormValidator(
             cleaned_data=self.ae_options)
@@ -62,8 +54,7 @@ class TestAdverseEventRecordFormValidator(TestCase):
         """ Assert that the AE end date raises an error if end date is before
             the start date of the AE.
         """
-        self.ae_options.update(status='resolved',
-                               stop_date=get_utcnow().date() - relativedelta(days=2),
+        self.ae_options.update(stop_date=get_utcnow().date() - relativedelta(days=2),
                                outcome='resolved')
         form_validator = AdverseEventRecordFormValidator(
             cleaned_data=self.ae_options)
@@ -75,60 +66,9 @@ class TestAdverseEventRecordFormValidator(TestCase):
             validates or fails the tests if the Validation Error is raised
             unexpectedly.
         """
-        self.ae_options.update(status='resolved',
-                               start_date=get_utcnow().date() - relativedelta(months=2),
+        self.ae_options.update(start_date=get_utcnow().date() - relativedelta(months=2),
                                stop_date=get_utcnow().date() - relativedelta(days=23),
                                outcome='resolved')
-        form_validator = AdverseEventRecordFormValidator(
-            cleaned_data=self.ae_options)
-        try:
-            form_validator.validate()
-        except ValidationError as e:
-            self.fail(f'ValidationError unexpectedly raised. Got{e}')
-
-    def test_ae_status_resolved_outcome_invalid(self):
-        """ Assert that the AE outcome raises an error if status is resolved
-            and outcome specified does not match this.
-        """
-        self.ae_options.update(status='resolved',
-                               stop_date=get_utcnow().date())
-        form_validator = AdverseEventRecordFormValidator(
-            cleaned_data=self.ae_options)
-        self.assertRaises(ValidationError, form_validator.validate)
-        self.assertIn('outcome', form_validator._errors)
-
-    def test_ae_status_resolved_outcome_valid(self):
-        """ Tests if AE status is `resolved` and outcome is either `resolved`,
-            or `resolved with sequelae` cleaned data validates or fails the
-            tests if the Validation Error is raised unexpectedly.
-        """
-        self.ae_options.update(status='resolved',
-                               stop_date=get_utcnow().date(),
-                               outcome='resolved')
-        form_validator = AdverseEventRecordFormValidator(
-            cleaned_data=self.ae_options)
-        try:
-            form_validator.validate()
-        except ValidationError as e:
-            self.fail(f'ValidationError unexpectedly raised. Got{e}')
-
-    def test_ae_status_ongoing_outcome_invalid(self):
-        """ Assert that the AE outcome raises an error if status is ongoing
-            and outcome specified is either `resolved` or `resolved with sequelae`.
-        """
-        self.ae_options.update(status='ongoing',
-                               outcome='resolved')
-        form_validator = AdverseEventRecordFormValidator(
-            cleaned_data=self.ae_options)
-        self.assertRaises(ValidationError, form_validator.validate)
-        self.assertIn('outcome', form_validator._errors)
-
-    def test_ae_status_ongoing_outcome_valid(self):
-        """ Tests if AE status is `ongoing` and outcome is not `resolved`,
-            or `resolved with sequelae` cleaned data validates or fails the
-            tests if the Validation Error is raised unexpectedly.
-        """
-        self.ae_options.update(status='ongoing',)
         form_validator = AdverseEventRecordFormValidator(
             cleaned_data=self.ae_options)
         try:
@@ -140,8 +80,7 @@ class TestAdverseEventRecordFormValidator(TestCase):
         """ Assert that the AE sequelae specify raises an error if outcome is
             is resolved with sequelae, but not specified.
         """
-        self.ae_options.update(status='resolved',
-                               stop_date=get_utcnow().date(),
+        self.ae_options.update(stop_date=get_utcnow().date(),
                                outcome='resolved_with_sequelae')
         form_validator = AdverseEventRecordFormValidator(
             cleaned_data=self.ae_options)
@@ -153,8 +92,7 @@ class TestAdverseEventRecordFormValidator(TestCase):
             cleaned data validates or fails the tests if the Validation Error
             is raised unexpectedly.
         """
-        self.ae_options.update(status='resolved',
-                               stop_date=get_utcnow().date(),
+        self.ae_options.update(stop_date=get_utcnow().date(),
                                outcome='resolved_with_sequelae',
                                sequelae_specify='blah')
         form_validator = AdverseEventRecordFormValidator(
