@@ -94,9 +94,9 @@ class VaccinationHistoryFormValidator(FormValidator):
                                         dose='first_dose')
         if not dose1_product_name == 'azd_1222' and first_dose:
             message = {'dose1_product_name':
-                           f'The EDC has a record that the participate received '
-                           f'AstraZeneca (AZD 1222) as a first dose, Please recheck the'
-                           f' participants\'s dose records'}
+                       f'The EDC has a record that the participate received '
+                       f'AstraZeneca (AZD 1222) as a first dose, Please recheck the'
+                       f' participants\'s dose records'}
             raise ValidationError(message)
         elif not first_dose and dose1_product_name == 'azd_1222':
             message = {'dose1_product_name':
