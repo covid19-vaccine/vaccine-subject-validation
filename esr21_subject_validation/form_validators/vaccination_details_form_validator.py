@@ -46,7 +46,7 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
 
         self.validate_other_specify(field='location')
 
-        self.required_if(FIRST_DOSE,
+        self.required_if(*[FIRST_DOSE, SECOND_DOSE],
                          field='received_dose_before',
                          field_required='next_vaccination_date')
 
@@ -152,8 +152,8 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
 
         if vaccination_date and vaccination_date < report_datetime:
             message = {'vaccination_date':
-                           ('Vaccination date cannot be before visit report date.'
-                            f' {report_datetime}.')}
+                       ('Vaccination date cannot be before visit report date.'
+                        f' {report_datetime}.')}
             raise ValidationError(message)
 
     def validate_first_dose_against_second_dose(self):
