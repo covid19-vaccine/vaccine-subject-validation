@@ -78,6 +78,7 @@ class TestVaccinationHistoryFormValidator(TestCase):
             'subject_identifier': self.subject_identifier,
             'dose_quantity': '1',
             'dose1_product_name': 'azd_1',
+            'dose2_product_name': None,
             'dose1_date': get_utcnow().date(),
         }
 
@@ -97,6 +98,7 @@ class TestVaccinationHistoryFormValidator(TestCase):
         clean_data = {
             'subject_identifier': self.subject_identifier,
             'dose_quantity': '1',
+            'dose2_product_name': None,
             'dose1_product_name': 'vin'
         }
 
@@ -154,7 +156,7 @@ class TestVaccinationHistoryFormValidator(TestCase):
             'dose_quantity': '2',
             'dose1_product_name': 'azd_1222',
             'dose1_date': get_utcnow().date(),
-            'dose2_product_name': 'azd_1222',
+            'dose2_product_name': 'azd_1',
             'dose2_date': (get_utcnow() + relativedelta(days=56)).date()
         }
 
@@ -163,7 +165,7 @@ class TestVaccinationHistoryFormValidator(TestCase):
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn('dose2_product_name', form_validator._errors)
 
-    def test_second_dose(self):
+    def test_second_dose_date(self):
         VaccinationDetails.objects.create(
             subject_visit=self.visit_1000,
             report_datetime=get_utcnow(),
@@ -184,12 +186,10 @@ class TestVaccinationHistoryFormValidator(TestCase):
             'dose1_product_name': 'azd_1222',
             'dose1_date': get_utcnow().date(),
             'dose2_product_name': 'azd_1222',
-            'dose2_date': (get_utcnow() + relativedelta(days=56)).date()
+            'dose2_date': (get_utcnow() + relativedelta(days=66)).date()
         }
 
         form_validator = VaccinationHistoryFormValidator(
             cleaned_data=clean_data)
-        try:
-            form_validator.validate()
-        except ValidationError as e:
-            self.fail(f'ValidationError unexpectedly raised. Got{e}')
+        self.assertRaises(ValidationError, form_validator.validate)
+        self.assertIn('dose2_date', form_validator._errors)
