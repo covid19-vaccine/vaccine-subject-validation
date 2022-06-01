@@ -3,6 +3,8 @@ from django.core.exceptions import ValidationError
 from edc_constants.constants import YES
 from edc_form_validators import FormValidator
 
+from esr21_subject_validation.constants import SECOND_DOSE, FIRST_DOSE
+
 
 class VaccinationHistoryFormValidator(FormValidator):
     vaccination_details_cls = 'esr21_subject.vaccinationdetails'
@@ -41,7 +43,7 @@ class VaccinationHistoryFormValidator(FormValidator):
                 '2',
                 field='dose_quantity',
                 field_required=dose2_field)
- 
+
         dose_1 = self.cleaned_data['dose1_product_name']
         dose_2 = self.cleaned_data['dose2_product_name']
         num_of_doses = self.cleaned_data['dose_quantity']
@@ -91,18 +93,18 @@ class VaccinationHistoryFormValidator(FormValidator):
         subject_identifier = self.cleaned_data.get('subject_identifier')
         dose1_product_name = self.cleaned_data.get('dose1_product_name')
         first_dose = self.dose_received(subject_identifier=subject_identifier,
-                                        dose='first_dose')
+                                        dose=FIRST_DOSE)
         if not dose1_product_name == 'azd_1222' and first_dose:
-            message = {'dose1_product_name':
-                       f'The EDC has a record that the participate received '
-                       f'AstraZeneca (AZD 1222) as a first dose, Please recheck the'
-                       f' participants\'s dose records'}
+            message = {
+                'dose1_product_name': f'The EDC has a record that the participate '
+                                      f'received AstraZeneca (AZD 1222) as a first dose,'
+                                      f' Please recheck the participants\'s dose records'}
             raise ValidationError(message)
         elif not first_dose and dose1_product_name == 'azd_1222':
-            message = {'dose1_product_name':
-                           f'The EDC has a no record that the participate received '
-                           f'AstraZeneca (AZD 1222) as a first dose, Please recheck the'
-                           f' participants\'s dose records'}
+            message = {
+                'dose1_product_name': f'The EDC has a no record that the participate'
+                                      f' received AstraZeneca (AZD 1222) as a first dose,'
+                                      f' Please recheck the participants\'s dose records'}
             raise ValidationError(message)
 
     def validate_first_dose_date(self):
@@ -110,31 +112,31 @@ class VaccinationHistoryFormValidator(FormValidator):
         dose1_date = self.cleaned_data.get('dose1_date')
         dose1_product_name = self.cleaned_data.get('dose1_product_name')
         first_dose = self.dose_received(subject_identifier=subject_identifier,
-                                        dose='first_dose')
+                                        dose=FIRST_DOSE)
         if dose1_product_name == 'azd_1222' and first_dose:
             first_dose_date = first_dose.vaccination_date.date()
             if not (first_dose_date == dose1_date):
-                message = {'dose1_date':
-                               f'The participant received AstraZeneca (AZD 1222) as first'
-                               f' dose on date {first_dose_date}'}
+                message = {
+                    'dose1_date': f'The participant received AstraZeneca (AZD 1222) as'
+                                  f' first dose on date {first_dose_date}'}
                 raise ValidationError(message)
 
     def validate_second_dose(self):
         subject_identifier = self.cleaned_data.get('subject_identifier')
         dose2_product_name = self.cleaned_data.get('dose2_product_name')
         second_dose = self.dose_received(subject_identifier=subject_identifier,
-                                         dose='second_dose')
+                                         dose=SECOND_DOSE)
         if not dose2_product_name == 'azd_1222' and second_dose:
-            message = {'dose2_product_name':
-                           f'The EDC has a record that the participate received '
-                           f'AstraZeneca (AZD 1222) as a second dose, Please recheck the'
-                           f' participants\'s dose record'}
+            message = {
+                'dose2_product_name': f'The EDC has a record that the participate '
+                                      f'received AstraZeneca (AZD 1222) as a second dose,'
+                                      f' Please recheck the participants\'s dose record'}
             raise ValidationError(message)
         elif not second_dose and dose2_product_name == 'azd_1222':
-            message = {'dose2_product_name':
-                           f'The EDC has a no record that the participate received '
-                           f'AstraZeneca (AZD 1222) as a second dose, Please recheck the'
-                           f' participants\'s dose record'}
+            message = {
+                'dose2_product_name': f'The EDC has a no record that the participate '
+                                      f'received AstraZeneca (AZD 1222) as a second dose, '
+                                      f'Please recheck the participants\'s dose record'}
             raise ValidationError(message)
 
     def validate_second_dose_date(self):
@@ -142,11 +144,11 @@ class VaccinationHistoryFormValidator(FormValidator):
         dose2_date = self.cleaned_data.get('dose2_date')
         dose2_product_name = self.cleaned_data.get('dose2_product_name')
         second_dose = self.dose_received(subject_identifier=subject_identifier,
-                                         dose='second_dose')
-        if not dose2_product_name == 'azd_1222' and second_dose:
+                                         dose=SECOND_DOSE)
+        if dose2_product_name == 'azd_1222' and second_dose:
             second_dose_date = second_dose.vaccination_date.date()
             if not second_dose_date == dose2_date:
-                message = {'dose2_date':
-                               f'The participant received AstraZeneca (AZD 1222) as '
-                               f'second dose on date {second_dose_date}'}
+                message = {
+                    'dose2_date': f'The participant received AstraZeneca (AZD 1222) as '
+                                  f'second dose on date {second_dose_date}'}
                 raise ValidationError(message)
