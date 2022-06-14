@@ -10,7 +10,6 @@ from .models import Appointment, SubjectVisit, VaccinationDetails, VaccinationHi
 from django.test.utils import tag
 
 
-@tag('vd')
 class VaccinationDetailsFormValidatorTests(TestCase):
 
     def setUp(self):
@@ -141,7 +140,7 @@ class VaccinationDetailsFormValidatorTests(TestCase):
 
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn(field_name, form_validator._errors)
-
+    @tag('ll')
     def test_location_required(self):
         field_name = 'location'
 
@@ -277,7 +276,7 @@ class VaccinationDetailsFormValidatorTests(TestCase):
         form_validator = VaccineDetailsFormValidator(cleaned_data=self.data)
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn('vaccination_date', form_validator._errors)
-
+    @tag('vnd')
     def test_validate_expiry_dt_against_visit_dt(self):
 
         field_name = 'expiry_date'
@@ -302,7 +301,7 @@ class VaccinationDetailsFormValidatorTests(TestCase):
         form_validator = VaccineDetailsFormValidator(cleaned_data=self.data)
         self.assertRaises(ValidationError, form_validator.validate)
         self.assertIn(field_name, form_validator._errors)
-
+    
     def test_validate_next_vaccination_dt_against_visit_date(self):
         field_name = 'next_vaccination_date'
 
