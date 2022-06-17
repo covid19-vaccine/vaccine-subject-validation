@@ -82,7 +82,7 @@ class RapidHivTestingFormValidator(FormValidator):
                     message = {'rapid_test_date': 'The test date is required'}
                     raise ValidationError(message)  
                 
-        elif ((consent == NO )and (prev_hiv_test == NO)):
+        elif ((consent == NO )and (prev_hiv_test != YES)):
             message = {'rapid_test_result': 'The participant cannot proceed without a previous test or consenting'}
             raise ValidationError(message)
                          
