@@ -45,6 +45,8 @@ class RapidHivTestingFormValidator(FormValidator):
         evidence_hiv_status = self.cleaned_data.get('evidence_hiv_status')
         
         threshold_date = (get_utcnow() - relativedelta(months=3)).date()
+        
+        
  
         if ((consent == NO )and (prev_hiv_test == YES)):
             if prev_test_date and prev_test_date is not None:
@@ -54,14 +56,14 @@ class RapidHivTestingFormValidator(FormValidator):
                 else:
                     
                     if rapid_test_done != YES:
-                        if prev_test_date < threshold_date :
-                            if (hiv_result and hiv_result == POS):
-                                if (rapid_test_done and rapid_test_done == YES):
-                                    message = {'rapid_test_done': 'Participant is HIV positive, rapid test is not required'}
-                                    raise ValidationError(message)  
-                                
+                        
+                        if prev_test_date < threshold_date and hiv_result == NEG :    
                             message = {'rapid_test_done': 'The previous hiv test has expired a new test is required'}
                             raise ValidationError(message)
+                        if (hiv_result and hiv_result == POS):
+                            if (rapid_test_done and rapid_test_done == YES):
+                                message = {'rapid_test_done': 'Participant is HIV positive, rapid test is not required'}
+                                raise ValidationError(message)  
             
             elif prev_test_date is None:
                     message = {'hiv_test_date': (
