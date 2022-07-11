@@ -72,7 +72,7 @@ class RapidHivTestingFormValidator(FormValidator):
                     raise ValidationError(message)      
             
         elif (consent == YES):
-            if rapid_test_done != YES:
+            if (rapid_test_done != YES and hiv_result == NEG):
                 message = {'rapid_test_done': 'A test needs to be processed'}
                 raise ValidationError(message)  
             else:
@@ -87,18 +87,3 @@ class RapidHivTestingFormValidator(FormValidator):
         elif ((consent == NO )and (prev_hiv_test != YES)):
             message = {'rapid_test_result': 'The participant cannot proceed without a previous test or consenting'}
             raise ValidationError(message)
-                         
-                  
-              
-                    
-                    
-                        
-                    
-            
-            
-            
-            
-               
-        
-        
-    
