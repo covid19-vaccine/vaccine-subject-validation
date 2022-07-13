@@ -64,18 +64,18 @@ class RapidHivTestingFormValidator(FormValidator):
         #             self._errors.update(message)
         #             raise ValidationError(message)      
 
-        if (consent == YES):
+        if (consent == YES and hiv_result == NEG):
             if rapid_test_done != YES:
                 message = {'rapid_test_done': 'A test needs to be processed'}
                 raise ValidationError(message)  
-            else:
-                if rapid_test_date is not None and rapid_test_date:
-                    if rapid_test_result is None:
-                        message = {'rapid_test_result': 'A test result is required'}
-                        raise ValidationError(message)
-                elif rapid_test_date is None:
-                    message = {'rapid_test_date': 'The test date is required'}
-                    raise ValidationError(message)
+            # else:
+            #     if rapid_test_date is not None and rapid_test_date:
+            #         if rapid_test_result is None:
+            #             message = {'rapid_test_result': 'A test result is required'}
+            #             raise ValidationError(message)
+            #     elif rapid_test_date is None:
+            #         message = {'rapid_test_date': 'The test date is required'}
+            #         raise ValidationError(message)
 
         # elif ((consent == NO )and (prev_hiv_test != YES)):
         #     message = {'rapid_test_result': 'The participant cannot proceed without a previous test or consenting'}
