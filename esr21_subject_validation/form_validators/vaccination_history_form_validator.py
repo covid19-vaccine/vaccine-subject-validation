@@ -44,18 +44,6 @@ class VaccinationHistoryFormValidator(FormValidator):
                 field='dose_quantity',
                 field_required=dose2_field)
 
-        dose_1 = self.cleaned_data.get('dose1_product_name')
-        dose_2 = self.cleaned_data.get('dose2_product_name')
-        num_of_doses = self.cleaned_data.get('dose_quantity')
-
-        if num_of_doses == '2' and 'janssen' in [dose_2, dose_1]:
-            message = {
-                'dose2_product_name':
-                    f'Participant has received {dose_1} and '
-                    f'{dose_2} therefore they are not eligible to participate'
-            }
-            raise ValidationError(message)
-
         self.validate_number_of_doses()
         self.validate_first_dose()
         self.validate_first_dose_date()
