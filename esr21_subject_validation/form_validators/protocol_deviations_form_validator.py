@@ -2,6 +2,8 @@ from edc_form_validators import FormValidator
 
 
 class ProtocolDeviationFormValidator(FormValidator):
+    
+    
     def clean(self):
         super().clean()
 
