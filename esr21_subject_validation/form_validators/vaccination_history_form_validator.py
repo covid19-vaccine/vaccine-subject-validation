@@ -44,18 +44,6 @@ class VaccinationHistoryFormValidator(FormValidator):
                 field='dose_quantity',
                 field_required=dose2_field)
 
-        dose_1 = self.cleaned_data['dose1_product_name']
-        dose_2 = self.cleaned_data['dose2_product_name']
-        num_of_doses = self.cleaned_data['dose_quantity']
-
-        if num_of_doses == '2' and 'janssen' in [dose_2, dose_1]:
-            message = {
-                'dose2_product_name':
-                    f'Participant has received {dose_1} and '
-                    f'{dose_2} therefore they are not eligible to participate'
-            }
-            raise ValidationError(message)
-
         self.validate_number_of_doses()
         self.validate_first_dose()
         self.validate_first_dose_date()
@@ -77,6 +65,8 @@ class VaccinationHistoryFormValidator(FormValidator):
                              f' of AstraZeneca (AZD 1222), Please correct your entry'}
         if str(vac_details_count) == dose_received and not (
                 dose1_product_name == 'azd_1222' or dose2_product_name == 'azd_1222'):
+            raise ValidationError(message)
+        elif not str(vac_details_count) == dose_received and vac_details_count > 0:
             raise ValidationError(message)
 
     def dose_received(self, subject_identifier, dose):
