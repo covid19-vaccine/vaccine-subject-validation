@@ -25,11 +25,12 @@ class VaccinationHistoryFormValidator(FormValidator):
 
         for dose1_field in dose1_required:
             self.required_if_true(
-                dose_quantity in ['1', '2'],
+                dose_quantity in ['1', '2','3'],
                 field_required=dose1_field)
 
         fields_other = {'dose1_product_name': 'dose1_product_other',
-                        'dose2_product_name': 'dose2_product_other'}
+                        'dose2_product_name': 'dose2_product_other',
+                        'dose3_product_name': 'dose3_product_other'}
 
         for field, field_other in fields_other.items():
             self.validate_other_specify(
@@ -38,12 +39,11 @@ class VaccinationHistoryFormValidator(FormValidator):
 
         dose2_required = ['dose2_product_name', 'dose2_date']
 
+
         for dose2_field in dose2_required:
-            self.required_if(
-                '2',
-                field='dose_quantity',
+            self.required_if_true(
+                dose_quantity in ['2','3'],
                 field_required=dose2_field)
-            
             
         dose3_required = ['dose3_product_name', 'dose3_date']
             
@@ -51,7 +51,7 @@ class VaccinationHistoryFormValidator(FormValidator):
             self.required_if(
                 '3',
                 field='dose_quantity',
-                field_required=dose3_field)    
+                field_required=dose3_field)       
 
         self.validate_number_of_doses()
         self.validate_first_dose()
