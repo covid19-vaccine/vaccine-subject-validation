@@ -75,8 +75,8 @@ class VaccinationHistoryFormValidator(FormValidator):
         if str(vac_details_count) == dose_received and not (
                 dose1_product_name == 'azd_1222' or dose2_product_name == 'azd_1222'):
             raise ValidationError(message)
-        elif not str(vac_details_count) == dose_received and vac_details_count > 0:
-            raise ValidationError(message)
+        # elif not str(vac_details_count) == dose_received and vac_details_count > 0:
+        #     raise ValidationError(message)
 
     def dose_received(self, subject_identifier, dose):
         try:
