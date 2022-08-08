@@ -25,11 +25,12 @@ class VaccinationHistoryFormValidator(FormValidator):
 
         for dose1_field in dose1_required:
             self.required_if_true(
-                dose_quantity in ['1', '2'],
+                dose_quantity in ['1', '2','3'],
                 field_required=dose1_field)
 
         fields_other = {'dose1_product_name': 'dose1_product_other',
-                        'dose2_product_name': 'dose2_product_other'}
+                        'dose2_product_name': 'dose2_product_other',
+                        'dose3_product_name': 'dose3_product_other'}
 
         for field, field_other in fields_other.items():
             self.validate_other_specify(
@@ -38,11 +39,19 @@ class VaccinationHistoryFormValidator(FormValidator):
 
         dose2_required = ['dose2_product_name', 'dose2_date']
 
+
         for dose2_field in dose2_required:
-            self.required_if(
-                '2',
-                field='dose_quantity',
+            self.required_if_true(
+                dose_quantity in ['2','3'],
                 field_required=dose2_field)
+            
+        dose3_required = ['dose3_product_name', 'dose3_date']
+            
+        for dose3_field in dose3_required:
+            self.required_if(
+                '3',
+                field='dose_quantity',
+                field_required=dose3_field)       
 
         self.validate_number_of_doses()
         self.validate_first_dose()
@@ -66,8 +75,8 @@ class VaccinationHistoryFormValidator(FormValidator):
         if str(vac_details_count) == dose_received and not (
                 dose1_product_name == 'azd_1222' or dose2_product_name == 'azd_1222'):
             raise ValidationError(message)
-        elif not str(vac_details_count) == dose_received and vac_details_count > 0:
-            raise ValidationError(message)
+        # elif not str(vac_details_count) == dose_received and vac_details_count > 0:
+        #     raise ValidationError(message)
 
     def dose_received(self, subject_identifier, dose):
         try:
