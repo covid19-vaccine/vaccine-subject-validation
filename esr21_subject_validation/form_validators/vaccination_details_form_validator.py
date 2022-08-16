@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from edc_constants.constants import YES, NO
 from edc_form_validators import FormValidator
 
-from ..constants import FIRST_DOSE, SECOND_DOSE
+from ..constants import FIRST_DOSE, SECOND_DOSE, BOOSTER_DOSE
 from .crf_form_validator import CRFFormValidator
 
 
@@ -193,3 +193,19 @@ class VaccineDetailsFormValidator(CRFFormValidator, FormValidator):
                            ('Vaccination date cannot be before the visit report'
                             f' date. {report_datetime}.')}
                 raise ValidationError(message)
+            
+    def validate_vac_history_against_vac_d(self):  
+        subject_identifier = self.cleaned_data.get('subject_visit').subject_identifier
+        dose_received = self.cleaned_data.get('received_dose_before')
+
+        vaccination_history = self.vaccination_history_model_obj(
+            subject_identifier=subject_identifier)
+        if getattr(vaccination_history, 'received_vaccine', None) == YES:
+            if getattr(vaccination_history, 'dose_quantity', None) == '1' and dose_received != SECOND_DOSE:
+                message = {'received_dose_before':
+                        ('Participant has a first dose please select SECOND DOSE')}
+                raise ValidationError(message)
+            elif getattr(vaccination_history, 'dose_quantity', None) == '2' and dose_received != BOOSTER_DOSE:
+                message = {'received_dose_before':
+                        ('Participant has a first dose and second dose please select the BOOSTER DOSE')}
+                raise ValidationError(message)        
