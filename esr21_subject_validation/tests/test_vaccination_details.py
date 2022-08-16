@@ -1,6 +1,5 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from zmq import constants
 from edc_base.utils import get_utcnow, relativedelta
 from edc_constants.constants import NO, YES, OTHER, NOT_APPLICABLE
 
