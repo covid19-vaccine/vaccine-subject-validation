@@ -15,6 +15,10 @@ class MedicalHistoryFormValidator(CRFFormValidator, FormValidator):
                                m2m_field='covid_symptoms',
                                field_other='symptoms_other')
 
+        self.m2m_other_specify('HIV',
+                               m2m2_field='comorbidities',
+                               field_other='received_art')
+
         self.m2m_other_specify(OTHER,
                                m2m_field='comorbidities',
                                field_other='comorbidities_other')
